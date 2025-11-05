@@ -20,6 +20,7 @@ import base64
 sys.path.insert(0, str(Path(__file__).parent))
 
 from cost_model import CostModel
+from export_utils import export_to_csv, generate_pdf_report, detect_cost_anomalies
 
 # Initialize Dash app with Bootstrap theme
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
@@ -275,13 +276,20 @@ def render_tab_content(active_tab):
                 ], width=6)
             ]),
             
-            # Data Table
+            # Data Table with Export
             dbc.Row([
                 dbc.Col([
                     dbc.Card([
                         dbc.CardBody([
-                            html.H5("📋 Detailed Pricing Data", className="card-title"),
-                            html.Div(id="data-table")
+                            html.Div([
+                                html.H5("📋 Detailed Pricing Data", className="card-title", style={"display": "inline-block"}),
+                                dbc.ButtonGroup([
+                                    dbc.Button("📥 Export CSV", id="export-csv-btn", color="success", className="ms-3"),
+                                    dbc.Button("📄 Export PDF", id="export-pdf-btn", color="danger", className="ms-2"),
+                                ], className="float-end")
+                            ]),
+                            html.Div(id="data-table"),
+                            html.Div(id="export-status", className="mt-3")
                         ])
                     ])
                 ])
@@ -308,6 +316,11 @@ def render_tab_content(active_tab):
         
         return dbc.Container([
             html.H3("💡 Cost Optimization Recommendations", className="mb-4"),
+            dbc.Row([
+                dbc.Col([
+                    html.Div(id="anomaly-alert", className="mb-4")
+                ])
+            ]),
             dbc.Row(rec_cards),
             dbc.Row([
                 dbc.Col([
@@ -801,6 +814,100 @@ def update_pricing_comparison(provider, instance, hours, years):
         
     except Exception as e:
         return dbc.Alert(f"Error: {str(e)}", color="danger"), {"data": [], "layout": {}}
+
+
+# Export callbacks
+@app.callback(
+    Output("export-status", "children"),
+    [Input("export-csv-btn", "n_clicks"),
+     Input("export-pdf-btn", "n_clicks")],
+    [State("provider-filter", "value"),
+     State("region-filter", "value"),
+     State("service-filter", "value")]
+)
+def handle_exports(csv_clicks, pdf_clicks, provider, region, service):
+    """Handle CSV and PDF exports."""
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return ""
+    
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    
+    try:
+        # Filter data
+        filtered_df = df.copy()
+        if provider != "all":
+            filtered_df = filtered_df[filtered_df["provider"] == provider]
+        if region != "all":
+            filtered_df = filtered_df[filtered_df["region"] == region]
+        if service != "all":
+            if service == "compute":
+                filtered_df = filtered_df[filtered_df["price_per_hour"].notna()]
+            elif service == "storage":
+                filtered_df = filtered_df[filtered_df["price_per_gb_month"].notna()]
+        
+        if button_id == "export-csv-btn" and csv_clicks:
+            csv_data = export_to_csv(filtered_df)
+            filename = f"cloud_cost_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            return dbc.Alert([
+                html.Strong("CSV Export Ready!"), 
+                html.Br(),
+                html.A("Download CSV", href=f"data:text/csv;base64,{base64.b64encode(csv_data.encode()).decode()}", 
+                      download=filename, className="btn btn-success btn-sm mt-2")
+            ], color="success")
+        
+        elif button_id == "export-pdf-btn" and pdf_clicks:
+            # Get TCO comparisons for PDF
+            comparisons = cost_model.compare_providers("2vcpu-8gb", "us-east-1", hours_per_month=730, years=5)
+            valid_comps = [c for c in comparisons if "error" not in c]
+            
+            pdf_result = generate_pdf_report(filtered_df.to_dict('records'), valid_comps)
+            if isinstance(pdf_result, str) and "requires" in pdf_result:
+                return dbc.Alert(pdf_result, color="warning")
+            
+            filename = f"cloud_cost_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            pdf_base64 = base64.b64encode(pdf_result.getvalue()).decode()
+            return dbc.Alert([
+                html.Strong("PDF Export Ready!"),
+                html.Br(),
+                html.A("Download PDF", href=f"data:application/pdf;base64,{pdf_base64}",
+                      download=filename, className="btn btn-danger btn-sm mt-2")
+            ], color="success")
+        
+    except Exception as e:
+        return dbc.Alert(f"Export error: {str(e)}", color="danger")
+    
+    return ""
+
+
+# Anomaly detection callback
+@app.callback(
+    Output("anomaly-alert", "children"),
+    [Input("tabs", "active_tab")]
+)
+def update_anomalies(active_tab):
+    """Update anomaly detection."""
+    if active_tab != "recommendations":
+        return ""
+    
+    anomalies = detect_cost_anomalies(pricing_data)
+    if not anomalies:
+        return dbc.Alert("✅ No cost anomalies detected", color="success")
+    
+    anomaly_list = []
+    for anom in anomalies[:5]:  # Show top 5
+        color = "danger" if anom['status'] == 'high' else "warning"
+        anomaly_list.append(
+            html.Li([
+                f"{anom['provider'].upper()} {anom['instance_type']}: "
+                f"${anom['cost_per_vcpu']:.4f}/vCPU ({anom['deviation']} deviation)"
+            ])
+        )
+    
+    return dbc.Alert([
+        html.H5("⚠️ Cost Anomalies Detected", className="alert-heading"),
+        html.Ul(anomaly_list)
+    ], color="warning")
 
 
 if __name__ == "__main__":

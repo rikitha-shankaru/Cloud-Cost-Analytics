@@ -9,8 +9,13 @@ Helps organizations identify cost-effective deployment strategies.
 
 - **Live cost ingestion** from public APIs (currently mocked, ready for API integration)
 - **5-year cost projection model** with parameterized inputs
-- **Interactive Plotly Dash dashboard** with real-time filtering
+- **Interactive Plotly Dash dashboard** with 5 tabs (Overview, Recommendations, Pricing Models, Instance Finder, Projections)
+- **Export functionality** - CSV and PDF report generation
+- **Cost anomaly detection** - Automated detection of pricing outliers
+- **Instance recommender** - Find optimal instances based on workload requirements
+- **Pricing model comparison** - Compare On-Demand vs Reserved vs Spot pricing
 - **Dockerized** for easy deployment
+- **CI/CD pipeline** - Automated testing and validation
 
 ### Tech Stack
 
@@ -60,7 +65,11 @@ cloud-cost-analytics/
 ├── src/
 │   ├── fetch_pricing.py      # Unified pricing fetcher (AWS/GCP/OCI)
 │   ├── cost_model.py         # TCO projection model
-│   └── dashboard.py          # Plotly Dash UI
+│   ├── dashboard.py          # Plotly Dash UI
+│   └── export_utils.py      # CSV/PDF export and anomaly detection
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # CI/CD pipeline
 ├── requirements.txt
 ├── Dockerfile
 └── README.md
@@ -76,10 +85,16 @@ The project is structured to easily integrate real pricing APIs:
 
 See `src/fetch_pricing.py` for integration points.
 
-### Next Steps
+### Completed Features ✅
 
-- [ ] Wire real AWS/GCP/OCI pricing APIs
-- [ ] Add machine learning models for cost prediction
-- [ ] Implement cost anomaly detection
-- [ ] Add export functionality (CSV/PDF reports)
-- [ ] Set up CI/CD pipeline
+- ✅ **Export functionality** - CSV and PDF report generation with download links
+- ✅ **Cost anomaly detection** - Automated detection of pricing outliers (30% threshold)
+- ✅ **CI/CD pipeline** - GitHub Actions workflow for automated testing
+
+### Future Enhancements
+
+- [ ] Wire real AWS/GCP/OCI pricing APIs (requires API credentials)
+- [ ] Add machine learning models for cost prediction (needs training data)
+- [ ] Add historical cost tracking
+- [ ] Implement budget alerts
+- [ ] Add multi-region comparison charts
