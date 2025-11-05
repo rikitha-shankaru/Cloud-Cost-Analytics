@@ -27,6 +27,19 @@ Helps organizations identify cost-effective deployment strategies.
 - Supports parameterized inputs for **region**, **instance type**, and **time horizon**
 - Normalized pricing data across 3 major cloud providers
 
+### Screenshots
+
+📸 Dashboard screenshots available in `docs/screenshots/` directory.
+
+The dashboard features:
+- **Overview Tab**: Interactive filters and price comparison charts
+- **Recommendations Tab**: AI-powered cost optimization suggestions
+- **Pricing Models Tab**: Compare On-Demand, Reserved, and Spot pricing
+- **Instance Finder Tab**: Find optimal instances based on workload requirements
+- **Projections Tab**: Long-term TCO projections with timeline visualization
+
+![Dashboard Overview](docs/screenshots/overview.png) *(Screenshot: Overview tab with filters and charts)*
+
 ### Run Locally
 
 ```bash
