@@ -29,16 +29,22 @@ Helps organizations identify cost-effective deployment strategies.
 
 ### Screenshots
 
-📸 Dashboard screenshots available in `docs/screenshots/` directory.
+📸 Dashboard screenshots showcasing all features:
 
-The dashboard features:
+| Overview | Recommendations |
+|----------|------------------|
+| ![Overview](docs/screenshots/overview.png) | ![Recommendations](docs/screenshots/recommendations.png) |
+
+| Pricing Models | Instance Finder | Projections |
+|----------------|-----------------|-------------|
+| ![Pricing Models](docs/screenshots/pricing-models.png) | ![Instance Finder](docs/screenshots/instance-finder.png) | ![Projections](docs/screenshots/projections.png) |
+
+**Dashboard Features:**
 - **Overview Tab**: Interactive filters and price comparison charts
-- **Recommendations Tab**: AI-powered cost optimization suggestions
-- **Pricing Models Tab**: Compare On-Demand, Reserved, and Spot pricing
+- **Recommendations Tab**: AI-powered cost optimization suggestions with anomaly detection
+- **Pricing Models Tab**: Compare On-Demand, Reserved, and Spot pricing savings
 - **Instance Finder Tab**: Find optimal instances based on workload requirements
 - **Projections Tab**: Long-term TCO projections with timeline visualization
-
-![Dashboard Overview](docs/screenshots/overview.png) *(Screenshot: Overview tab with filters and charts)*
 
 ### Run Locally
 
